@@ -163,9 +163,9 @@ func (boxType boxType) String() string {
 	case last:
 		return "└──"
 	case afterLast:
-		return "  "
+		return "   "
 	case between:
-		return "│"
+		return "│  "
 	default:
 		panic("invalid box type")
 	}
