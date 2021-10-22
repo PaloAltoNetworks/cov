@@ -2,6 +2,14 @@
 
 Cov is a tool to analyze the go coverage output file.
 
+## Install
+
+```console
+go get -u go.aporeto.io/cov
+```
+
+## Usage
+
 ```console
 Usage of cov:
       --branch string       The branch to use to check the patch coverage against. Example: master
@@ -23,7 +31,7 @@ You can also filter for a given package or any substring.
 
 When `--target X` is set, the output will be colored given that target and the return will be 1 if target is not reached.
 
-Examples:
+## Examples
 
 Show coverage for one package and unit test coverage:
 ```console
