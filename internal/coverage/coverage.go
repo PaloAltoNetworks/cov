@@ -132,9 +132,13 @@ func (tree Tree) Fprint(w io.Writer, root bool, padding string, threshold float6
 
 	index := 0
 	for _, v := range tree {
-		c := color.New(color.FgGreen)
-		if v.Coverage < threshold {
-			c = color.New(color.FgRed)
+
+		c := color.New()
+		if threshold > 0 {
+			c = color.New(color.FgGreen)
+			if v.Coverage < threshold {
+				c = color.New(color.FgRed)
+			}
 		}
 		fmt.Fprintf(w, "%s%s\n", padding+getPadding(root, getBoxType(index, len(tree))), c.Sprintf("[%.0f%%] %s", v.Coverage, v.Name))
 		v.Children.Fprint(w, false, padding+getPadding(root, getBoxTypeExternal(index, len(tree))), threshold)

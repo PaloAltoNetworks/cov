@@ -8,7 +8,6 @@ import (
 	"go.aporeto.io/cov/internal/coverage"
 	"go.aporeto.io/cov/internal/git"
 	"go.uber.org/zap"
-	"golang.org/x/tools/cover"
 )
 
 func main() {
@@ -17,15 +16,9 @@ func main() {
 
 	zap.L().Debug("Coverage analysis", zap.Reflect("configuration", cfg))
 
-	// parse profiles
-	profiles := []*cover.Profile{}
-
-	for _, coveragePath := range cfg.CoverageFilePaths {
-		profs, err := cover.ParseProfiles(coveragePath)
-		if err != nil {
-			zap.L().Fatal("Unable to parse coverage profile", zap.Error(err))
-		}
-		profiles = append(profiles, profs...)
+	profiles, err := coverage.MergeProfiles(cfg.CoverageFilePaths...)
+	if err != nil {
+		zap.L().Fatal("Unable to read profiles", zap.Error(err))
 	}
 
 	files := cfg.Filters
@@ -46,10 +39,16 @@ func main() {
 
 	coverage := tree.GetCoverage()
 
-	if coverage < float64(cfg.CoverageThreshold) {
-		color.Red("\n%s is not up to requested coverage target.\n - current coverage: %.0f%%\n - requested: %d%%", cfg.Name, coverage, cfg.CoverageThreshold)
-		os.Exit(1)
+	if cfg.CoverageThreshold > 0 {
+		if coverage < float64(cfg.CoverageThreshold) {
+			color.Red("\n%s is not up to requested coverage target.\n - current coverage: %.0f%%\n - requested: %d%%", cfg.Name, coverage, cfg.CoverageThreshold)
+			os.Exit(1)
+		} else {
+
+			color.Green("\n%s is up to requested target.\n - current coverage: %.0f%%\n - requested: %d%%", cfg.Name, coverage, cfg.CoverageThreshold)
+		}
 	}
 
-	color.Green("\n%s is up to requested target.\n - current coverage: %.0f%%\n - requested: %d%%", cfg.Name, coverage, cfg.CoverageThreshold)
+	color.Green("\n%s coverage: %.0f%%\n", cfg.Name, coverage)
+
 }
