@@ -3,20 +3,19 @@ package main
 import (
 	"os"
 
-	"github.com/aporeto-inc/cov/internal/configuration"
-	"github.com/aporeto-inc/cov/internal/coverage"
-	"github.com/aporeto-inc/cov/internal/git"
 	"github.com/fatih/color"
+	"go.aporeto.io/cov/internal/configuration"
+	"go.aporeto.io/cov/internal/coverage"
+	"go.aporeto.io/cov/internal/git"
 	"go.uber.org/zap"
 	"golang.org/x/tools/cover"
 )
 
-// Start starts the service
 func main() {
 
 	cfg := configuration.NewConfiguration()
 
-	zap.L().Info("Coverage analysis", zap.Reflect("configuration", cfg))
+	zap.L().Debug("Coverage analysis", zap.Reflect("configuration", cfg))
 
 	// parse profiles
 	profiles := []*cover.Profile{}
@@ -41,10 +40,16 @@ func main() {
 
 	tree := coverage.NewTree(profiles, files)
 
-	tree.Fprint(os.Stdout, true, "", float64(cfg.CoverageThreshold))
+	if !cfg.Quiet {
+		tree.Fprint(os.Stdout, true, "", float64(cfg.CoverageThreshold))
+	}
 
-	if !tree.IsProperlyCovered(float64(cfg.CoverageThreshold)) {
-		color.Red("\n%s is not up to requested target: %d%%", cfg.Name, cfg.CoverageThreshold)
+	coverage := tree.GetCoverage()
+
+	if coverage < float64(cfg.CoverageThreshold) {
+		color.Red("\n%s is not up to requested coverage target.\n - current coverage: %.0f%%\n - requested: %d%%", cfg.Name, coverage, cfg.CoverageThreshold)
 		os.Exit(1)
 	}
+
+	color.Green("\n%s is up to requested target.\n - current coverage: %.0f%%\n - requested: %d%%", cfg.Name, coverage, cfg.CoverageThreshold)
 }

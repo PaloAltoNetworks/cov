@@ -4,6 +4,6 @@ package configuration
 var (
 	ProjectName    = "cov"
 	ProjectVersion = "v1.0.0"
-	ProjectSha     = "2d664e859f2279533c542491343b343dbb8edfae"
+	ProjectSha     = "f8f9754d287404d6c67fe773b6c0547ead3f1489"
 	ProjectRelease = "dev"
 )

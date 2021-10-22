@@ -109,14 +109,14 @@ func computeTree(tree []node) []node {
 	return tree
 }
 
-// IsProperlyCovered just check the first node coverage given the threshold
-func (tree Tree) IsProperlyCovered(threshold float64) bool {
+// GetCoverage just check the first node coverage given the threshold
+func (tree Tree) GetCoverage() float64 {
 
 	if tree == nil {
-		return true
+		return 0
 	}
 
-	return tree[0].Coverage > threshold
+	return tree[0].Coverage
 }
 
 // Fprint implement the Fpring for a node tree

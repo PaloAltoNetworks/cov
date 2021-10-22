@@ -19,11 +19,12 @@ type LoggingConf struct {
 type Configuration struct {
 	LoggingConf `mapstructure:",squash"`
 
-	BaseBranch        string   `mapstructure:"patch" desc:"The branch to use to check the patch coverage against. Example: master"`
+	BaseBranch        string   `mapstructure:"branch" desc:"The branch to use to check the patch coverage against. Example: master"`
 	CoverageFilePaths []string `mapstructure:"coverage" desc:"The coverage files to use." required:"true"`
 	CoverageThreshold int      `mapstructure:"target" desc:"The target of coverage in percent that is requested"`
 	Filters           []string `mapstructure:"filter" desc:"The filters to use for coverage lookup"`
 	Name              string   `mapstructure:"name" desc:"Meaning full name to use for output" default:"Project"`
+	Quiet             bool     `mapstructure:"quiet" desc:"Do not print details just the verdict"`
 }
 
 // Prefix returns the configuration prefix.
