@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -31,7 +30,7 @@ func main() {
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return viper.BindPFlags(cmd.Flags())
 		},
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 
 			branch := viper.GetString("branch")
 			threshold := viper.GetInt("threshold")
@@ -41,21 +40,25 @@ func main() {
 
 			if viper.GetBool("version") {
 				fmt.Printf("cov %s (%s)\n", version, commit)
-				os.Exit(0)
+				return nil
 			}
 
 			profiles, err := coverage.MergeProfiles(ignored, args)
 			if err != nil {
-				log.Fatal("Unable to read profiles:", err)
+				return fmt.Errorf("unable to read profiles: %s", err)
 			}
 
 			files := filters
 			if branch != "" {
 				gitFiles, err := git.GetDiffFiles(branch)
 				if err != nil {
-					log.Fatal("Unable to get change files for branch", branch, ":", err)
+					return fmt.Errorf("unable to get change files for branch %s: %w", branch, err)
 				}
 				files = append(files, gitFiles...)
+			}
+			if len(files) == 0 {
+				fmt.Println("no change in go files")
+				return nil
 			}
 
 			tree := coverage.NewTree(profiles, files)
@@ -76,6 +79,8 @@ func main() {
 			} else {
 				fmt.Printf("Coverage: %.0f%%\n", coverage)
 			}
+
+			return nil
 		},
 	}
 

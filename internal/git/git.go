@@ -21,6 +21,14 @@ func GetDiffFiles(branch string) (files []string, err error) {
 		return nil, fmt.Errorf("%v: %v", err, string(stderr.Bytes()))
 	}
 
-	return strings.Split(string(stdout.Bytes()), "\n"), nil
+	files = strings.Split(string(stdout.Bytes()), "\n")
 
+	var goFiles []string
+	for _, f := range files {
+		if strings.HasSuffix(f, ".go") {
+			goFiles = append(goFiles, f)
+		}
+	}
+
+	return goFiles, nil
 }
