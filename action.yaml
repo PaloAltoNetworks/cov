@@ -34,9 +34,15 @@ runs:
       fi
 
       if ! /home/runner/go/bin/cov $BRANCH_ARG -t ${{inputs.cov_threshold}} ${{inputs.cov_file}}; then
-        echo "add status check for failure"
+        curl \
+          -H "Authorization: Bearer ${{github.token}}" \
+          -X POST https://api.github.com/repos/${{github.repository}}/statuses/${{github.sha}} \
+          -d '{"state":"failure","description":"not up to standard","context":"cov"}'
         exit 1
       fi
 
-      echo "add status check for success"
+      curl \
+          -H "Authorization: Bearer ${{github.token}}" \
+          -X POST https://api.github.com/repos/${{github.repository}}/statuses/${{github.sha}} \
+          -d '{"state":"success","description":"up to standard","context":"cov"}'
       exit 0
