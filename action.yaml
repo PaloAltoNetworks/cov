@@ -26,10 +26,17 @@ runs:
   - name: coverage
     shell: bash
     run: |
-      go install github.com/PaloAltoNetworks/cov@${{ inputs.cov_version }}
-      if [[ "${{ github.base_ref }}" == "${{ inputs.main }}" ]]; then
+      go install github.com/PaloAltoNetworks/cov@${{inputs.cov_version}}
+
+      if [[ "${{github.base_ref}}" == "${{inputs.main}}" ]]; then
         git fetch origin ${{ github.base_ref }}
-        /home/runner/go/bin/cov -t ${{ inputs.cov_threshold }} -b origin/${{ github.base_ref }} ${{ inputs.cov_file }}
-      else
-        /home/runner/go/bin/cov -t ${{ inputs.cov_threshold }} ${{ inputs.cov_file }}
+        BRANCH_ARG="-b origin/${{github.base_ref}}"
       fi
+
+      if ! /home/runner/go/bin/cov $BRANCH_ARG -t ${{inputs.cov_threshold}} ${{inputs.cov_file}}; then
+        echo "add status check for failure"
+        exit 1
+      fi
+
+      echo "add status check for success"
+      exit 0
