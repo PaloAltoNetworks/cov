@@ -3,39 +3,14 @@ PROJECT_NAME = cov
 PROJECT_SHA ?= $(shell git rev-parse HEAD)
 PROJECT_RELEASE ?= dev
 
-export GO111MODULE = on
-export GOPRIVATE = go.aporeto.io,github.com/aporeto-inc
+default: lint build
 
-define VERSIONS_FILE
-package configuration
-
-// Various version information.
-var (
-	ProjectName    = "$(PROJECT_NAME)"
-	ProjectVersion = "$(PROJECT_VERSION)"
-	ProjectSha     = "$(PROJECT_SHA)"
-	ProjectRelease = "$(PROJECT_RELEASE)"
-)
-endef
-export VERSIONS_FILE
-
-init:
-	# go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-	@echo generating versions.go
-	@echo "$$VERSIONS_FILE" > ./internal/configuration/versions.go
-
-remod:
-	@cd /tmp && go get go.aporeto.io/remod@master
-	@ case "${PROJECT_BRANCH}" in \
-	release-*) remod up go.aporeto.io --version "${PROJECT_BRANCH}" ;; \
-	*) remod up go.aporeto.io --version "master" ;; \
-	esac;
-
-lint: init
+lint:
 	golangci-lint run \
 		--deadline=5m \
 		--disable-all \
 		--exclude-use-default=false \
+		--exclude=package-comments \
 		--enable=errcheck \
 		--enable=goimports \
 		--enable=ineffassign \
@@ -52,13 +27,13 @@ lint: init
 		--enable=typecheck \
 		./...
 
-test: lint
-	go test ./... -race -cover -covermode=atomic -coverprofile=unit_coverage.cov
+build:
+	CGO_ENABLED=0 go build -ldflags="-w -s" -trimpath
 
-build_linux: test
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
+build_linux:
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -trimpath
 
-build: test
-	go build
+build_darwin:
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-w -s" -trimpath
 
 .PHONY: build

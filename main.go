@@ -13,6 +13,11 @@ import (
 	"go.aporeto.io/cov/internal/git"
 )
 
+var (
+	version = "v0.0.0"
+	commit  = "dev"
+)
+
 func main() {
 
 	cobra.OnInitialize(initCobra)
@@ -32,6 +37,11 @@ func main() {
 			filters := viper.GetStringSlice("filters")
 			ignored := viper.GetStringSlice("ignore")
 			quiet := viper.GetBool("quiet")
+
+			if viper.GetBool("version") {
+				fmt.Printf("cov %s (%s)\n", version, commit)
+				os.Exit(0)
+			}
 
 			profiles, err := coverage.MergeProfiles(ignored, args)
 			if err != nil {
@@ -68,6 +78,7 @@ func main() {
 		},
 	}
 
+	rootCmd.PersistentFlags().Bool("version", false, "show version")
 	rootCmd.Flags().StringP("branch", "b", "", "The branch to use to check the patch coverage against. Example: master")
 	rootCmd.Flags().IntP("threshold", "t", 0, "The target of coverage in percent that is requested")
 	rootCmd.Flags().StringSliceP("filter", "f", nil, "The filters to use for coverage lookup")
