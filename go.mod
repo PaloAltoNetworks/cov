@@ -1,4 +1,4 @@
-module go.aporeto.io/cov
+module github.com/PaloAltoNetworks/cov
 
 go 1.16
 

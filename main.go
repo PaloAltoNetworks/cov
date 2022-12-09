@@ -6,11 +6,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/PaloAltoNetworks/cov/internal/coverage"
+	"github.com/PaloAltoNetworks/cov/internal/git"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.aporeto.io/cov/internal/coverage"
-	"go.aporeto.io/cov/internal/git"
 )
 
 var (
