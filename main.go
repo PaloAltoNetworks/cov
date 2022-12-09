@@ -7,7 +7,7 @@ import (
 
 	"github.com/PaloAltoNetworks/cov/internal/coverage"
 	"github.com/PaloAltoNetworks/cov/internal/git"
-	"github.com/fatih/color"
+	"github.com/PaloAltoNetworks/cov/internal/statuscheck"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -37,6 +37,9 @@ func main() {
 			filters := viper.GetStringSlice("filters")
 			ignored := viper.GetStringSlice("ignore")
 			quiet := viper.GetBool("quiet")
+			thresholdExitCode := viper.GetInt("threshold-exit-code")
+			statusSend := viper.GetString("send-status")
+			statusToken := viper.GetString("send-token")
 
 			if viper.GetBool("version") {
 				fmt.Printf("cov %s (%s)\n", version, commit)
@@ -64,20 +67,26 @@ func main() {
 			tree := coverage.NewTree(profiles, files)
 
 			if !quiet {
-				tree.Fprint(os.Stdout, true, "", float64(threshold))
+				tree.Fprint(os.Stderr, true, "", float64(threshold))
 			}
 
 			coverage := tree.GetCoverage()
+			isSuccess := threshold > 0 && threshold <= int(coverage)
+			fmt.Printf(
+				`{"coverage":%.0f,"threshold":%d,"success":%t}`+"\n",
+				coverage,
+				threshold,
+				isSuccess,
+			)
 
-			if threshold > 0 {
-				if coverage < float64(threshold) {
-					color.Red("Not up to requested coverage target. coverage: %.0f%% requested: %d%%\n", coverage, threshold)
-					os.Exit(1)
-				} else {
-					color.Green("Up to requested target: coverage: %.0f%% requested: %d%%\n", coverage, threshold)
+			if statusSend != "" {
+				if err := statuscheck.Send(statusSend, statusToken, int(coverage), threshold); err != nil {
+					return fmt.Errorf("unable to send status check: %w", err)
 				}
-			} else {
-				fmt.Printf("Coverage: %.0f%%\n", coverage)
+			}
+
+			if !isSuccess {
+				os.Exit(thresholdExitCode)
 			}
 
 			return nil
@@ -90,6 +99,9 @@ func main() {
 	rootCmd.Flags().StringSliceP("filter", "f", nil, "The filters to use for coverage lookup")
 	rootCmd.Flags().StringSliceP("ignore", "i", nil, "Define patterns to ignore matching files.")
 	rootCmd.Flags().BoolP("quiet", "q", false, "Do not print details, just the verdict")
+	rootCmd.Flags().IntP("threshold-exit-code", "e", 1, "Set the exit code on coverage threshold miss")
+	rootCmd.Flags().String("send-status", "", "If set, send a status check. format: [repo]/[owner]@[sha]")
+	rootCmd.Flags().String("send-token", "", "If set, use this token to send the status. If empty, $GITHUB_TOKEN will be used")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s\n", err)

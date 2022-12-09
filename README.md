@@ -67,7 +67,7 @@ test -coverprofile=coverage.out`) then add a new step:
       push:
         branches:
         - master
-      pull_request:
+      pull_request_target:
     jobs:
       build:
         steps:
@@ -85,3 +85,6 @@ test -coverprofile=coverage.out`) then add a new step:
 
 > All parameters are optionals. The default values are shown below, but they can
 > all be ommited if they are good enough for you.
+
+> Note that you must use `pull_request_target` and not the old `pull_request`
+> trigger.
