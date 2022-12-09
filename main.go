@@ -25,6 +25,7 @@ func main() {
 	rootCmd := &cobra.Command{
 		Use:           "cov cover.out...",
 		Short:         "Analyzes coverage",
+		Args:          cobra.MinimumNArgs(1),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
