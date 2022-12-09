@@ -1,26 +1,26 @@
-before:
-  hooks:
-    - make init
-    - make remod
-    - make test
-builds:
-  - env:
-      - CGO_ENABLED=0
-    goarch:
-      - amd64
-    goos:
-      - linux
-      - darwin
-archives:
-  - format: binary
-    name_template: "{{ .ProjectName }}_{{ .Os }}"
-checksum:
-  name_template: "checksums.txt"
 snapshot:
-  name_template: "{{ .Tag }}"
+  name_template: "{{ .Tag }}-next"
 changelog:
   sort: asc
   filters:
     exclude:
-      - "^docs:"
-      - "^test:"
+    - '^test:'
+    - '^examples:'
+builds:
+  - id: cov
+    main: .
+    binary: cov
+    goos:
+    - linux
+    - freebsd
+    - darwin
+    goarch:
+    - amd64
+    env:
+    - CGO_ENABLED=0
+
+archives:
+  - id: cov
+    format: binary
+    builds:
+    - cov

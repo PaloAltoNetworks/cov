@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/gobwas/glob"
 	"golang.org/x/tools/cover"
 )
 
@@ -82,7 +83,7 @@ func addProfile(profiles []*cover.Profile, p *cover.Profile) ([]*cover.Profile, 
 }
 
 // MergeProfiles merge all profiles files
-func MergeProfiles(files ...string) ([]*cover.Profile, error) {
+func MergeProfiles(ignorePatterns []string, files []string) ([]*cover.Profile, error) {
 
 	var merged []*cover.Profile
 
@@ -97,9 +98,23 @@ func MergeProfiles(files ...string) ([]*cover.Profile, error) {
 				return nil, err
 			}
 		}
-
 	}
 
-	return merged, nil
+	globs := []glob.Glob{}
+	for _, pattern := range ignorePatterns {
+		globs = append(globs, glob.MustCompile(pattern))
+	}
 
+	var cleanedMerged []*cover.Profile
+L:
+	for _, profile := range merged {
+		for _, g := range globs {
+			if g.Match(profile.FileName) {
+				continue L
+			}
+		}
+		cleanedMerged = append(cleanedMerged, profile)
+	}
+
+	return cleanedMerged, nil
 }

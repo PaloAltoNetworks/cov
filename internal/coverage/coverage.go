@@ -126,10 +126,6 @@ func (tree Tree) Fprint(w io.Writer, root bool, padding string, threshold float6
 		return
 	}
 
-	if root {
-		fmt.Fprintf(w, "\n")
-	}
-
 	index := 0
 	for _, v := range tree {
 
