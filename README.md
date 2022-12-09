@@ -1,12 +1,17 @@
 # Cov
 
-Cov is a tool to analyze the go coverage output file.
+Cov is a simple code coverage checker for golang. It's like codacy or codecov
+(at least regarding features that people actually want), but not SaaS in a few
+line of code. It can be used in a integration pipeline to validate pull request
+coverage.
 
 ## Install
 
 ```console
-go get -u go.aporeto.io/cov
+go install github.com/PaloAltoNetworks/cov@master
 ```
+
+Or you can get a release from the releases page.
 
 ## Usage
 
@@ -25,13 +30,20 @@ Flags:
   -t, --threshold int    The target of coverage in percent that is requested
 ```
 
-When the `--branch BASE` is used a diff will be done between your current branch and the branch passed as base to identify the files you changed.
+When the `--branch BASE` is used a diff will be done between your current branch
+and the branch passed as base to identify the files you changed.
 
 You can pass several coverage files they all will be merged.
 
-You can also filter for a given package or any substring.
+You can filter for a given package or any substring.
 
 When `--threshold X` is set, the output will be colored given that target and the return will be 1 if target is not reached.
+
+You can ignore files matching some patterns using the `--ignore` option:
+
+```console
+cov --ignore "**/pgsapi/**" --ignore "*_test.go" coverage.out
+```
 
 ## Examples
 
@@ -109,9 +121,3 @@ Coverage: 60%
 ```
 
 > Note: Your pull branch **must** be aligned with latest change of the base branch
-
-You can also ignore files matching some patterns using the `--ignore` option:
-
-```console
-cov --ignore "**/pgsapi/**" --ignore "*_test.go"
-```
