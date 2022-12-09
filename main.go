@@ -92,9 +92,7 @@ func main() {
 }
 
 func initCobra() {
-
 	viper.SetEnvPrefix("cov")
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-
 }
