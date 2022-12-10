@@ -34,15 +34,17 @@ runs:
       echo "* cov_file: ${{inputs.cov_file}}"
       echo "* head_ref: ${{github.head_ref}}"
       echo "* base_ref: ${{github.base_ref}}"
+      echo "* sha: ${{github.sha}}"
 
       if [[ "${{github.head_ref}}" != "${{inputs.base_ref}}" ]]; then
+        echo "- pull request: fetching branch ${{github.base_ref}}"
         git fetch origin ${{ github.base_ref }}
         export BRANCH_ARG="-b origin/${{github.base_ref}}"
       fi
 
       /home/runner/go/bin/cov $BRANCH_ARG \
-          -t ${{inputs.cov_threshold}} \
           -e 0 \
+          -t ${{inputs.cov_threshold}} \
           --send-status "${{github.repository}}@${{github.sha}}" \
           --send-token "${{github.token}}" \
           ${{inputs.cov_file}}
