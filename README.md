@@ -5,6 +5,9 @@ Cov is a simple code coverage checker for golang. It's like codacy or codecov
 line of code. It can be used in a integration pipeline to validate pull request
 coverage.
 
+This repository contains a github action that can be used directly with your
+github workflow (check below)
+
 ## Installation
 
     go install github.com/PaloAltoNetworks/cov@latest
@@ -80,7 +83,7 @@ test -coverprofile=coverage.out`) then add a new step:
             cov_version: latest
             cov_file: coverage.out
             cov_threshold: "70"
-            main: master
+            main_branch: main
 ```
 
 > All parameters are optionals. The default values are shown below, but they can
