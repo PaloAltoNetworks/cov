@@ -37,17 +37,22 @@ runs:
       echo "* sha: ${{github.sha}}"
 
       SHA="${{github.sha}}"
+
       if [[ "${{github.head_ref}}" != "" ]]; then
         if [[ "${{github.head_ref}}" != "${{inputs.base_ref}}" ]]; then
-          echo "- pull request: fetching branch ${{github.base_ref}}"
+
           git fetch origin ${{github.base_ref}}
           BRANCH_ARG="-b origin/${{github.base_ref}}"
+
           git fetch origin ${{github.head_ref}}
           SHA="$(git log -n 1 --pretty=format:"%H" origin/${{github.head_ref}})"
+
+          echo "- pull request: fetching branch ${{github.base_ref}}"
+          echo "- pull request: fetching branch ${{github.head_ref}}"
+          echo "- pull request: sha changed to $SHA"
         fi
       fi
 
-      set -x
       /home/runner/go/bin/cov $BRANCH_ARG \
           -e 0 \
           -t ${{inputs.cov_threshold}} \
