@@ -36,11 +36,14 @@ runs:
       echo "* base_ref: ${{github.base_ref}}"
       echo "* sha: ${{github.sha}}"
 
+      SHA="${{github.sha}}"
       if [[ "${{github.head_ref}}" != "" ]]; then
         if [[ "${{github.head_ref}}" != "${{inputs.base_ref}}" ]]; then
           echo "- pull request: fetching branch ${{github.base_ref}}"
-          git fetch origin ${{ github.base_ref }}
-          export BRANCH_ARG="-b origin/${{github.base_ref}}"
+          git fetch origin ${{github.base_ref}}
+          BRANCH_ARG="-b origin/${{github.base_ref}}"
+          git fetch origin ${{github.head_ref}}
+          SHA="$(git log -n 1 --pretty=format:"%H" ${{github.head_ref}})"
         fi
       fi
 
@@ -48,6 +51,6 @@ runs:
       /home/runner/go/bin/cov $BRANCH_ARG \
           -e 0 \
           -t ${{inputs.cov_threshold}} \
-          --send-status "${{github.repository}}@${{github.sha}}" \
+          --send-status "${{github.repository}}@${SHA}" \
           --send-token "${{github.token}}" \
           ${{inputs.cov_file}}
