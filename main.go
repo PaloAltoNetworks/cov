@@ -71,8 +71,10 @@ func main() {
 				files = append(files, gitFiles...)
 				if len(files) == 0 {
 					fmt.Println("no change in go files")
-					if err := statuscheck.SendNoop(statusSend, statusToken); err != nil {
-						return fmt.Errorf("unable to send noop status: %w", err)
+					if statusSend != "" {
+						if err := statuscheck.SendNoop(statusSend, statusToken); err != nil {
+							return fmt.Errorf("unable to send noop status: %w", err)
+						}
 					}
 					return nil
 				}
