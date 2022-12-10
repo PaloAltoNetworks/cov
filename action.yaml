@@ -30,6 +30,7 @@ runs:
 
       echo "base_ref: ${{github.base_ref}}"
       echo "main_branch: ${{inputs.main_branch}}"
+      echo "cov_version: ${{inputs.cov_version}}"
 
       if [[ "${{github.base_ref}}" == "${{inputs.main_branch}}" ]]; then
         git fetch origin ${{ github.base_ref }}
