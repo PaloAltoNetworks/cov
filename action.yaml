@@ -1,4 +1,4 @@
-name: cov
+name: paloaltonetworks/cov
 
 description: Very simple action to run code coverage checking for go projects.
 
@@ -7,17 +7,18 @@ inputs:
     description: The main branch name.
     required: true
     default: main
-  cov_version:
-    description: The version to use for cov.
-    required: true
-    default: ${{github.action_ref}}
-  cov_threshold:
-    description: Default required coverage percentage.
-    default: "90"
   cov_file:
     description: The name of the coverage file to use.
     required: true
     default: coverage.out
+  cov_threshold:
+    description: Default required coverage percentage.
+    default: "90"
+  cov_version:
+    description: The version to use for cov.
+    required: true
+    default: ${{github.action_ref}}
+
 
 runs:
   using: 'composite'
