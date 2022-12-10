@@ -71,24 +71,26 @@ func main() {
 				files = append(files, gitFiles...)
 				if len(files) == 0 {
 					fmt.Println("no change in go files")
+					if err := statuscheck.SendNoop(statusSend, statusToken); err != nil {
+						return fmt.Errorf("unable to send noop status: %w", err)
+					}
 					return nil
 				}
 			}
 
 			tree := coverage.NewTree(profiles, files)
-
 			if !quiet {
 				tree.Fprint(os.Stderr, true, "", float64(threshold))
 			}
 
 			coverage := tree.GetCoverage()
 			isSuccess := threshold > 0 && threshold <= int(coverage)
-			fmt.Printf(
-				`{"coverage":%.0f,"threshold":%d,"success":%t}`+"\n",
-				coverage,
-				threshold,
-				isSuccess,
-			)
+
+			if isSuccess {
+				fmt.Printf("up to standard. %.0f%% / %d%%\n", coverage, threshold)
+			} else {
+				fmt.Printf("not up to standard. %.0f%% / %d%%\n", coverage, threshold)
+			}
 
 			if statusSend != "" {
 				if err := statuscheck.Send(statusSend, statusToken, int(coverage), threshold); err != nil {

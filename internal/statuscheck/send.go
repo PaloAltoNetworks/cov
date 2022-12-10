@@ -19,14 +19,6 @@ type githubStatus struct {
 // Send sends the status check to github.
 func Send(target string, token string, coverage int, threshold int) error {
 
-	parts := strings.SplitN(target, "@", 2)
-	repo := parts[0]
-	sha := parts[1]
-
-	if token == "" {
-		token = os.Getenv("GITHUB_TOKEN")
-	}
-
 	status := githubStatus{
 		Context: "cov",
 		State: func() string {
@@ -42,6 +34,31 @@ func Send(target string, token string, coverage int, threshold int) error {
 			}
 			return fmt.Sprintf("failure %s", info)
 		}(),
+	}
+
+	return send(status, target, token)
+}
+
+// SendNoop sends the noop check.
+func SendNoop(target string, token string) error {
+
+	status := githubStatus{
+		Context:     "cov",
+		State:       "success",
+		Description: "no change in any go files",
+	}
+
+	return send(status, target, token)
+}
+
+func send(status githubStatus, target string, token string) error {
+
+	parts := strings.SplitN(target, "@", 2)
+	repo := parts[0]
+	sha := parts[1]
+
+	if token == "" {
+		token = os.Getenv("GITHUB_TOKEN")
 	}
 
 	buf := bytes.NewBuffer(nil)
