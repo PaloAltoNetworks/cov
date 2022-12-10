@@ -43,7 +43,7 @@ runs:
           git fetch origin ${{github.base_ref}}
           BRANCH_ARG="-b origin/${{github.base_ref}}"
           git fetch origin ${{github.head_ref}}
-          SHA="$(git log -n 1 --pretty=format:"%H" ${{github.head_ref}})"
+          SHA="$(git log -n 1 --pretty=format:"%H" origin/${{github.head_ref}})"
         fi
       fi
 
