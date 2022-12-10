@@ -10,7 +10,7 @@ inputs:
   cov_version:
     description: The version to use for cov.
     required: true
-    default: latest
+    default: ${{github.action_ref}}
   cov_threshold:
     description: Default required coverage percentage.
     default: "90"
