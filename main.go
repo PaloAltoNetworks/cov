@@ -46,6 +46,17 @@ func main() {
 				return nil
 			}
 
+			if len(ignored) == 0 {
+				data, err := os.ReadFile(".covignore")
+				if err == nil {
+					for _, line := range strings.Split(string(data), "\n") {
+						if !strings.HasPrefix(line, "#") {
+							ignored = append(ignored, line)
+						}
+					}
+				}
+			}
+
 			profiles, err := coverage.MergeProfiles(ignored, args)
 			if err != nil {
 				return fmt.Errorf("unable to read profiles: %s", err)
@@ -58,10 +69,10 @@ func main() {
 					return fmt.Errorf("unable to get change files for branch %s: %w", branch, err)
 				}
 				files = append(files, gitFiles...)
-			}
-			if len(files) == 0 {
-				fmt.Println("no change in go files")
-				return nil
+				if len(files) == 0 {
+					fmt.Println("no change in go files")
+					return nil
+				}
 			}
 
 			tree := coverage.NewTree(profiles, files)

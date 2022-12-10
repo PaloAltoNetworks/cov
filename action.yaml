@@ -4,16 +4,16 @@ description: Very simple action to run code coverage checking for go projects.
 
 inputs:
   main_branch:
-    description: The main branch name
+    description: The main branch name.
     required: true
-    default: master
+    default: main
   cov_version:
-    description: The version to use for cov
+    description: The version to use for cov.
     required: true
-    default: master
+    default: latest
   cov_threshold:
-    description: Default required coverage percentage
-    default: "70"
+    description: Default required coverage percentage.
+    default: "90"
   cov_file:
     description: The name of the coverage file to use.
     required: true
