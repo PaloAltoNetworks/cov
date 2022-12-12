@@ -90,8 +90,10 @@ func main() {
 
 			if isSuccess {
 				fmt.Printf("up to standard. %.0f%% / %d%%\n", coverage, threshold)
-			} else {
+			} else if threshold > 0 {
 				fmt.Printf("not up to standard. %.0f%% / %d%%\n", coverage, threshold)
+			} else {
+				fmt.Printf("%.0f%% / %d%%\n", coverage, threshold)
 			}
 
 			if statusSend != "" {
