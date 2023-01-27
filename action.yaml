@@ -36,21 +36,32 @@ runs:
       echo "* head_ref: ${{github.head_ref}}"
       echo "* base_ref: ${{github.base_ref}}"
       echo "* sha: ${{github.sha}}"
+      echo "* repo: ${{github.repositoryUrl}}"
+      echo "* event repo: ${{github.event.pull_request.head.repo.clone_url}}"
+
+      REPO_URL="${{github.repositoryUrl}}"
+      REPO_URL="${REPO_URL//git:\/\//https:\/\/}"
+
+      EVENT_REPO_URL="${{github.event.pull_request.head.repo.clone_url}}"
+      EVENT_REPO_URL="${EVENT_REPO_URL//git:\/\//https:\/\/}"
+
+      EVENT_REPO_NAME="${{github.event.pull_request.head.repo.full_name}}"
+      EVENT_REPO_NAME=${EVENT_REPO_NAME//\//-}
 
       SHA="${{github.sha}}"
 
       if [[ "${{github.head_ref}}" != "" ]]; then
-        if [[ "${{github.head_ref}}" != "${{inputs.base_ref}}" ]]; then
+        if [[ "${{github.head_ref}}" != "${{inputs.main_branch}}" ]]; then
 
+          git remote set-url origin "${REPO_URL}"
           git fetch origin ${{github.base_ref}}
+
+          git remote add "${EVENT_REPO_NAME}" "${EVENT_REPO_URL}"
+          git fetch "${EVENT_REPO_NAME}" "${{github.head_ref}}"
+          git checkout "${EVENT_REPO_NAME}/${{github.head_ref}}"
+
+          SHA="$(git log -n 1 --pretty=format:"%H" ${EVENT_REPO_NAME}/${{github.head_ref}})"
           BRANCH_ARG="-b origin/${{github.base_ref}}"
-
-          git fetch origin ${{github.head_ref}}
-          SHA="$(git log -n 1 --pretty=format:"%H" origin/${{github.head_ref}})"
-
-          echo "- pull request: fetching branch ${{github.base_ref}}"
-          echo "- pull request: fetching branch ${{github.head_ref}}"
-          echo "- pull request: sha changed to $SHA"
         fi
       fi
 

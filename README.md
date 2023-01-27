@@ -22,7 +22,7 @@ file (usually using `go test -coverprofile=coverage.out`) then add a new step:
       push:
         branches:
         - master
-      pull_request:
+      pull_request_target:
     jobs:
       build:
         steps:
