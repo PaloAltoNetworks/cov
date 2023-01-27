@@ -30,7 +30,7 @@ file (usually using `go test -coverprofile=coverage.out`) then add a new step:
         - uses: actions/setup-go@v3
         - name: test
           run: go test -coverprofile=coverage.out ./...
-        - uses: PaloAltoNetworks/cov@1.0.0
+        - uses: PaloAltoNetworks/cov@latest
 ```
 
 ### Parameters
@@ -43,7 +43,7 @@ The tool needs to know which branch is your main one in order to be able to run
 coverage on the pull requests patch. (default: `main`).
 
 ```yaml
-uses: PaloAltoNetworks/cov@1.0.0
+uses: PaloAltoNetworks/cov@latest
 with:
   main_branch: master
 ```
@@ -54,7 +54,7 @@ The tool needs to know where your coverage file has been generated. The path is
 relative to your repository root (default: `coverage.go`).
 
 ```yaml
-uses: PaloAltoNetworks/cov@1.0.0
+uses: PaloAltoNetworks/cov@latest
 with:
   cov_file: unit_coverage.out
 ```
@@ -66,7 +66,7 @@ to be considered up to standard. Note that you must give the percentage as a
 string. (default: `70`)
 
 ```yaml
-uses: PaloAltoNetworks/cov@1.0.0
+uses: PaloAltoNetworks/cov@latest
 with:
   cov_threshold: "80"
 ```
@@ -78,7 +78,7 @@ version of the cov tool. You should not need to touch this. (default:
 `${{github.action_ref}}`)
 
 ```yaml
-uses: PaloAltoNetworks/cov@1.0.0
+uses: PaloAltoNetworks/cov@latest
 with:
   cov_version: master
 ```
