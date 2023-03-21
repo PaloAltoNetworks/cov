@@ -17,7 +17,23 @@ type githubStatus struct {
 }
 
 // Send sends the status check to github.
-func Send(target string, token string, coverage int, threshold int) error {
+func Send(reportPath string, target string, token string) error {
+
+	status := githubStatus{}
+	data, err := os.ReadFile(reportPath)
+	if err != nil {
+		return fmt.Errorf("unable to read report file: %w", err)
+	}
+
+	if err := json.Unmarshal(data, &status); err != nil {
+		return fmt.Errorf("unable to unmarshal data file: %w", err)
+	}
+
+	return send(status, target, token)
+}
+
+// Write writes the reports file.
+func Write(path string, coverage int, threshold int) error {
 
 	status := githubStatus{
 		Context: "cov",
@@ -36,11 +52,11 @@ func Send(target string, token string, coverage int, threshold int) error {
 		}(),
 	}
 
-	return send(status, target, token)
+	return write(status, path)
 }
 
 // SendNoop sends the noop check.
-func SendNoop(target string, token string) error {
+func WriteNoop(path string) error {
 
 	status := githubStatus{
 		Context:     "cov",
@@ -48,7 +64,17 @@ func SendNoop(target string, token string) error {
 		Description: "no change in any go files",
 	}
 
-	return send(status, target, token)
+	return write(status, path)
+}
+
+func write(status githubStatus, path string) error {
+
+	data, err := json.MarshalIndent(status, "", "  ")
+	if err != nil {
+		return fmt.Errorf("unable encode report status: %w", err)
+	}
+
+	return os.WriteFile(path, data, 0600)
 }
 
 func send(status githubStatus, target string, token string) error {

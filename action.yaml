@@ -7,6 +7,10 @@ inputs:
     description: The main branch name.
     required: true
     default: main
+  cov_mode:
+    description: Running mode. Either 'coverage', 'send-status' or 'both'.
+    required: true
+    default: coverage
   cov_file:
     description: The name of the coverage file to use.
     required: true
@@ -18,17 +22,27 @@ inputs:
     description: The version to use for cov.
     required: true
     default: ${{github.action_ref}}
-
+  workflow_run_id:
+    description: |
+      In mode 'send-status', pass the workflow id that generated the cov report.
+  workflow_head_sha:
+    description: |
+      In mode 'send-status', pass the workflow head_sha.
 
 runs:
   using: 'composite'
 
+  ## common steps
   steps:
+  - name: setup
+    shell: bash
+    run: go install github.com/PaloAltoNetworks/cov@${{inputs.cov_version}}
+
+  ## coverage report generation
   - name: coverage
+    if: inputs.cov_mode == 'coverage' || inputs.cov_mode == 'both'
     shell: bash
     run: |
-      go install github.com/PaloAltoNetworks/cov@${{inputs.cov_version}}
-
       echo "* main_branch: ${{inputs.main_branch}}"
       echo "* cov_version: ${{inputs.cov_version}}"
       echo "* cov_threshold: ${{inputs.cov_threshold}}"
@@ -68,6 +82,46 @@ runs:
       /home/runner/go/bin/cov $BRANCH_ARG \
           -e 0 \
           -t ${{inputs.cov_threshold}} \
-          --send-status "${{github.repository}}@${SHA}" \
-          --send-token "${{github.token}}" \
           ${{inputs.cov_file}}
+
+  - uses: actions/upload-artifact@v3
+    if: inputs.cov_mode == 'coverage'
+    with:
+      name: cov.report
+      path: cov.report
+
+  ### upload report as status check
+  - name: download-report
+    if: inputs.cov_mode == 'send-status'
+    uses: actions/github-script@v3.1.0
+    with:
+      script: |
+        var artifacts = await github.actions.listWorkflowRunArtifacts({
+           owner: context.repo.owner,
+           repo: context.repo.repo,
+           run_id: ${{inputs.workflow_run_id}},
+        });
+        var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
+          return artifact.name == "cov.report"
+        })[0];
+        var download = await github.actions.downloadArtifact({
+           owner: context.repo.owner,
+           repo: context.repo.repo,
+           artifact_id: matchArtifact.id,
+           archive_format: 'zip',
+        });
+        var fs = require('fs');
+        fs.writeFileSync('${{github.workspace}}/cov.report.zip', Buffer.from(download.data));
+
+  - name: unzip-report
+    if: inputs.cov_mode == 'send-status'
+    shell: bash
+    run: unzip cov.report.zip
+
+  - name: upload-report
+    if: inputs.cov_mode == 'send-status' || inputs.cov_mode == 'both'
+    shell: bash
+    run: |
+      /home/runner/go/bin/cov \
+        --send-repo "${{github.repository}}@${{inputs.workflow_head_sha}}" \
+        --send-token "${{github.token}}"
