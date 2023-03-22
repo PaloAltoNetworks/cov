@@ -24,7 +24,6 @@ func main() {
 	rootCmd := &cobra.Command{
 		Use:           "cov cover.out...",
 		Short:         "Analyzes coverage",
-		Args:          cobra.MinimumNArgs(1),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -38,11 +37,20 @@ func main() {
 			ignored := viper.GetStringSlice("ignore")
 			quiet := viper.GetBool("quiet")
 			thresholdExitCode := viper.GetInt("threshold-exit-code")
-			statusSend := viper.GetString("send-status")
-			statusToken := viper.GetString("send-token")
+			reportPath := viper.GetString("report-path")
+			writeReport := viper.GetString("write-report")
+			sendRepo := viper.GetString("send-repo")
+			sendToken := viper.GetString("send-token")
 
 			if viper.GetBool("version") {
 				fmt.Printf("cov %s (%s)\n", version, commit)
+				return nil
+			}
+
+			if sendRepo != "" {
+				if err := statuscheck.Send(reportPath, sendRepo, sendToken); err != nil {
+					return fmt.Errorf("unable to send report as status check: %w", err)
+				}
 				return nil
 			}
 
@@ -71,9 +79,9 @@ func main() {
 				files = append(files, gitFiles...)
 				if len(files) == 0 {
 					fmt.Println("no change in go files")
-					if statusSend != "" {
-						if err := statuscheck.SendNoop(statusSend, statusToken); err != nil {
-							return fmt.Errorf("unable to send noop status: %w", err)
+					if writeReport != "" {
+						if err := statuscheck.WriteNoop(reportPath); err != nil {
+							return fmt.Errorf("unable to write noop status: %w", err)
 						}
 					}
 					return nil
@@ -96,9 +104,9 @@ func main() {
 				fmt.Printf("%.0f%% / %d%%\n", coverage, threshold)
 			}
 
-			if statusSend != "" {
-				if err := statuscheck.Send(statusSend, statusToken, int(coverage), threshold); err != nil {
-					return fmt.Errorf("unable to send status check: %w", err)
+			if writeReport != "" {
+				if err := statuscheck.Write(reportPath, int(coverage), threshold); err != nil {
+					return fmt.Errorf("unable to write status check: %w", err)
 				}
 			}
 
@@ -117,7 +125,10 @@ func main() {
 	rootCmd.Flags().StringSliceP("ignore", "i", nil, "Define patterns to ignore matching files.")
 	rootCmd.Flags().BoolP("quiet", "q", false, "Do not print details, just the verdict")
 	rootCmd.Flags().IntP("threshold-exit-code", "e", 1, "Set the exit code on coverage threshold miss")
-	rootCmd.Flags().String("send-status", "", "If set, send a status check. format: [repo]/[owner]@[sha]")
+
+	rootCmd.Flags().String("report-path", "cov.report", "Defines the path for the status report.")
+	rootCmd.Flags().Bool("write-report", false, "If set, write a status check report into --report-path")
+	rootCmd.Flags().String("send-repo", "", "If set, set the status report from --report-path as status check. format: [repo]/[owner]@[sha]")
 	rootCmd.Flags().String("send-token", "", "If set, use this token to send the status. If empty, $GITHUB_TOKEN will be used")
 
 	if err := rootCmd.Execute(); err != nil {

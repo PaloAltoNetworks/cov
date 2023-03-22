@@ -22,7 +22,7 @@ file (usually using `go test -coverprofile=coverage.out`) then add a new step:
       push:
         branches:
         - master
-      pull_request_target:
+      pull_request:
     jobs:
       build:
         steps:
@@ -30,12 +30,70 @@ file (usually using `go test -coverprofile=coverage.out`) then add a new step:
         - uses: actions/setup-go@v3
         - name: test
           run: go test -coverprofile=coverage.out ./...
-        - uses: PaloAltoNetworks/cov@2.0.0
+        - uses: PaloAltoNetworks/cov@3.0.0
+          with:
+            cov_mode: coverage
 ```
+
+If you want to publish a status check on the commit, you need a second workflow
+file that has the permission to send a status check on the target repository:
+
+```yaml
+name: cov
+on:
+  workflow_run:
+    workflows: ["build-go"]
+    types: ["completed"]
+jobs:
+  cov:
+    steps:
+      - uses: PaloAltoNetworks/cov@3.0.0
+        with:
+          cov_mode: send-status
+          workflow_run_id: ${{github.event.workflow_run.id}}
+          workflow_head_sha: ${{github.event.workflow_run.head_sha}}
+```
+
+> NOTE: You want two files to prevent eventual staling of secrets. The first one
+> is triggered on `pull_request`, which will make the workflow run in the
+> context of the pull request head, and will run in the context of the fork
+> originating the pull request. The second is triggered on `workflow_run`, which
+> will this time run in the context of the pull request target, and will have
+> the permission to send a status check.
 
 ### Parameters
 
 There are several parameters you can tweak:
+
+#### Operation mode
+
+Cov works in a 2 step process. First it will check the coverage then generate a
+cov report, that then can be used to send a status check on the commit
+triggering the job (default: `coverage`).
+
+- `cov_mode: coverage`: check the coverage and generate `cov.report`, and
+    uploads it as workflow artifact.
+- `cov_mode: send-status`: get the `cov.report` previously generated, and send a
+    status check on the corresponding commit.
+- `cov_mode: both`: Lagacy behavior (not recommended)
+
+```yaml
+uses: PaloAltoNetworks/cov@3.0.0
+with:
+  cov_mode: coverage
+```
+
+In `send-status` mode, you must pass `workflow_run_id` so the job knows
+where to get the `cov.report` artifact from, and `workflow_head_sha` to know on
+which commit SHA it should send the status.
+
+```yaml
+uses: PaloAltoNetworks/cov@3.0.0
+with:
+  cov_mode: send-status
+  workflow_run_id: ${{github.event.workflow_run.id}}
+  workflow_head_sha: ${{github.event.workflow_run.head_sha}}
+```
 
 #### Repository main branch
 
@@ -43,7 +101,7 @@ The tool needs to know which branch is your main one in order to be able to run
 coverage on the pull requests patch. (default: `main`).
 
 ```yaml
-uses: PaloAltoNetworks/cov@2.0.0
+uses: PaloAltoNetworks/cov@3.0.0
 with:
   main_branch: master
 ```
@@ -54,7 +112,7 @@ The tool needs to know where your coverage file has been generated. The path is
 relative to your repository root (default: `coverage.go`).
 
 ```yaml
-uses: PaloAltoNetworks/cov@2.0.0
+uses: PaloAltoNetworks/cov@3.0.0
 with:
   cov_file: unit_coverage.out
 ```
@@ -66,7 +124,7 @@ to be considered up to standard. Note that you must give the percentage as a
 string. (default: `70`)
 
 ```yaml
-uses: PaloAltoNetworks/cov@2.0.0
+uses: PaloAltoNetworks/cov@3.0.0
 with:
   cov_threshold: "80"
 ```
@@ -78,7 +136,7 @@ version of the cov tool. You should not need to touch this. (default:
 `${{github.action_ref}}`)
 
 ```yaml
-uses: PaloAltoNetworks/cov@2.0.0
+uses: PaloAltoNetworks/cov@3.0.0
 with:
   cov_version: master
 ```
@@ -120,11 +178,13 @@ Or you can grab a release from the releases page.
       -h, --help                      help for cov
       -i, --ignore strings            Define patterns to ignore matching files.
       -q, --quiet                     Do not print details, just the verdict
-          --send-status string        If set, send a status check. format: [repo]/[owner]@[sha]
+          --report-path string        Defines the path for the status report. (default "cov.report")
+          --send-repo string          If set, set the status report from --report-path as status check. format: [repo]/[owner]@[sha]
           --send-token string         If set, use this token to send the status. If empty, $GITHUB_TOKEN will be used
       -t, --threshold int             The target of coverage in percent that is requested
       -e, --threshold-exit-code int   Set the exit code on coverage threshold miss (default 1)
           --version                   show version
+          --write-report              If set, write a status check report into --report-path
 
 When the `--branch` flag is used, a diff will be done between your current
 branch and the given branch to identify the files you changed, and only look for
