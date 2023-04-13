@@ -1,4 +1,4 @@
-package statuscheck
+package githubcheck
 
 import (
 	"bytes"
@@ -7,69 +7,72 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/PaloAltoNetworks/cov/internal/statuscheck"
 )
 
-type githubStatus struct {
+type githubStatusCheck struct {
 	State       string `json:"state"`
 	TargetURL   string `json:"target_url"`
 	Description string `json:"description"`
 	Context     string `json:"context"`
 }
 
-// Send sends the status check to github.
-func Send(reportPath string, target string, token string) error {
+// New returns a new statuc checker for GitHub.
+func New() statuscheck.StatusChecker {
 
-	status := githubStatus{}
+	return &githubStatusCheck{}
+}
+
+// Send sends the status check to github.
+func (s *githubStatusCheck) Send(reportPath string, target string, token string) error {
+
 	data, err := os.ReadFile(reportPath)
 	if err != nil {
 		return fmt.Errorf("unable to read report file: %w", err)
 	}
 
-	if err := json.Unmarshal(data, &status); err != nil {
+	if err := json.Unmarshal(data, &s); err != nil {
 		return fmt.Errorf("unable to unmarshal data file: %w", err)
 	}
 
-	return send(status, target, token)
+	return s.send(target, token)
 }
 
 // Write writes the reports file.
-func Write(path string, coverage int, threshold int) error {
+func (s *githubStatusCheck) Write(path string, coverage int, threshold int) error {
 
-	status := githubStatus{
-		Context: "cov",
-		State: func() string {
-			if coverage >= threshold {
-				return "success"
-			}
-			return "failure"
-		}(),
-		Description: func() string {
-			info := fmt.Sprintf("%d%% / %d%%", coverage, threshold)
-			if coverage >= threshold {
-				return fmt.Sprintf("success %s", info)
-			}
-			return fmt.Sprintf("failure %s", info)
-		}(),
-	}
+	s.Context = "cov"
+	s.State = func() string {
+		if coverage >= threshold {
+			return "success"
+		}
+		return "failure"
+	}()
+	s.Description = func() string {
+		info := fmt.Sprintf("%d%% / %d%%", coverage, threshold)
+		if coverage >= threshold {
+			return fmt.Sprintf("success %s", info)
+		}
+		return fmt.Sprintf("failure %s", info)
+	}()
 
-	return write(status, path)
+	return s.write(path)
 }
 
 // SendNoop sends the noop check.
-func WriteNoop(path string) error {
+func (s *githubStatusCheck) WriteNoop(path string) error {
 
-	status := githubStatus{
-		Context:     "cov",
-		State:       "success",
-		Description: "no change in any go files",
-	}
+	s.Context = "cov"
+	s.State = "success"
+	s.Description = "no change in any go files"
 
-	return write(status, path)
+	return s.write(path)
 }
 
-func write(status githubStatus, path string) error {
+func (s *githubStatusCheck) write(path string) error {
 
-	data, err := json.MarshalIndent(status, "", "  ")
+	data, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
 		return fmt.Errorf("unable encode report status: %w", err)
 	}
@@ -77,7 +80,7 @@ func write(status githubStatus, path string) error {
 	return os.WriteFile(path, data, 0600)
 }
 
-func send(status githubStatus, target string, token string) error {
+func (s *githubStatusCheck) send(target string, token string) error {
 
 	parts := strings.SplitN(target, "@", 2)
 	repo := parts[0]
@@ -88,7 +91,7 @@ func send(status githubStatus, target string, token string) error {
 	}
 
 	buf := bytes.NewBuffer(nil)
-	if err := json.NewEncoder(buf).Encode(status); err != nil {
+	if err := json.NewEncoder(buf).Encode(s); err != nil {
 		return fmt.Errorf("unable to encode github status check: %w", err)
 	}
 
