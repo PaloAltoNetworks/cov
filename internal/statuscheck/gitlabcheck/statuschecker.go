@@ -18,12 +18,16 @@ type gitlabStatusCheck struct {
 	TargetURL   string `json:"target_url"`
 	Description string `json:"description"`
 	Context     string `json:"context"`
+
+	hostURL string
 }
 
 // New returns a new statuc checker for GitLab.
-func New() statuscheck.StatusChecker {
+func New(hostURL string) statuscheck.StatusChecker {
 
-	return &gitlabStatusCheck{}
+	return &gitlabStatusCheck{
+		hostURL: hostURL,
+	}
 }
 
 // Send sends the status check to gitlab.
@@ -99,7 +103,8 @@ func (s *gitlabStatusCheck) send(target string, token string) error {
 
 	req, err := http.NewRequest(
 		http.MethodPost,
-		fmt.Sprintf("https://git.scm.prismacloud.io/api/v4/projects/%s/statuses/%s",
+		fmt.Sprintf("%s/api/v4/projects/%s/statuses/%s",
+			s.hostURL,
 			gitlab.PathEscape(repo),
 			url.PathEscape(sha),
 		),

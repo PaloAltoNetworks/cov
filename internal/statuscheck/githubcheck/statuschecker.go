@@ -16,12 +16,16 @@ type githubStatusCheck struct {
 	TargetURL   string `json:"target_url"`
 	Description string `json:"description"`
 	Context     string `json:"context"`
+
+	hostURL string
 }
 
 // New returns a new statuc checker for GitHub.
-func New() statuscheck.StatusChecker {
+func New(hostURL string) statuscheck.StatusChecker {
 
-	return &githubStatusCheck{}
+	return &githubStatusCheck{
+		hostURL: hostURL,
+	}
 }
 
 // Send sends the status check to github.
@@ -97,7 +101,7 @@ func (s *githubStatusCheck) send(target string, token string) error {
 
 	req, err := http.NewRequest(
 		http.MethodPost,
-		fmt.Sprintf("https://api.github.com/repos/%s/statuses/%s", repo, sha),
+		fmt.Sprintf("%s/repos/%s/statuses/%s", s.hostURL, repo, sha),
 		buf,
 	)
 	if err != nil {

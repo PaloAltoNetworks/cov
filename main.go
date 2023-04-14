@@ -36,6 +36,7 @@ func main() {
 			branch := viper.GetString("branch")
 			threshold := viper.GetInt("threshold")
 			filters := viper.GetStringSlice("filters")
+			hostURL := viper.GetString("host-url")
 			ignored := viper.GetStringSlice("ignore")
 			provider := viper.GetString("provider")
 			quiet := viper.GetBool("quiet")
@@ -53,9 +54,9 @@ func main() {
 			var statusChecker statuscheck.StatusChecker
 			switch provider {
 			case "github":
-				statusChecker = githubcheck.New()
+				statusChecker = githubcheck.New(hostURL)
 			case "gitlab":
-				statusChecker = gitlabcheck.New()
+				statusChecker = gitlabcheck.New(hostURL)
 			default:
 				return fmt.Errorf("unknown provider: %s", provider)
 			}
@@ -140,6 +141,7 @@ func main() {
 	rootCmd.Flags().BoolP("quiet", "q", false, "Do not print details, just the verdict")
 	rootCmd.Flags().IntP("threshold-exit-code", "e", 1, "Set the exit code on coverage threshold miss")
 
+	rootCmd.Flags().String("host-url", "https://api.github.com", "The host URL of the provider")
 	rootCmd.Flags().String("report-path", "cov.report", "Defines the path for the status report.")
 	rootCmd.Flags().Bool("write-report", false, "If set, write a status check report into --report-path")
 	rootCmd.Flags().String("send-repo", "", "If set, set the status report from --report-path as status check. format: [repo]/[owner]@[sha]")
