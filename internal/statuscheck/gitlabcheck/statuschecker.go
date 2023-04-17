@@ -1,7 +1,6 @@
 package gitlabcheck
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,7 +14,6 @@ import (
 
 type gitlabStatusCheck struct {
 	State       string `json:"state"`
-	TargetURL   string `json:"target_url"`
 	Description string `json:"description"`
 	Context     string `json:"context"`
 
@@ -96,19 +94,21 @@ func (s *gitlabStatusCheck) send(target string, token string) error {
 		token = os.Getenv("GITLAB_TOKEN")
 	}
 
-	buf := bytes.NewBuffer(nil)
-	if err := json.NewEncoder(buf).Encode(s); err != nil {
-		return fmt.Errorf("unable to encode gitlab status check: %w", err)
+	params := url.Values{
+		"context":     []string{s.Context},
+		"state":       []string{s.State},
+		"description": []string{s.Description},
 	}
 
 	req, err := http.NewRequest(
 		http.MethodPost,
-		fmt.Sprintf("%s/api/v4/projects/%s/statuses/%s",
+		fmt.Sprintf("%s/api/v4/projects/%s/statuses/%s?%s",
 			s.hostURL,
 			gitlab.PathEscape(repo),
 			url.PathEscape(sha),
+			params.Encode(),
 		),
-		buf,
+		nil,
 	)
 	if err != nil {
 		return fmt.Errorf("unable to build request: %w", err)
@@ -120,6 +120,7 @@ func (s *gitlabStatusCheck) send(target string, token string) error {
 	if err != nil {
 		return fmt.Errorf("unable to send request: %w", err)
 	}
+
 	if resp.StatusCode != http.StatusCreated {
 		return fmt.Errorf("gitlab rejected the request: %s", resp.Status)
 	}
