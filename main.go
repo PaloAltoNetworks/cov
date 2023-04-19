@@ -8,12 +8,14 @@ import (
 	"github.com/PaloAltoNetworks/cov/internal/coverage"
 	"github.com/PaloAltoNetworks/cov/internal/git"
 	"github.com/PaloAltoNetworks/cov/internal/statuscheck"
+	"github.com/PaloAltoNetworks/cov/internal/statuscheck/githubcheck"
+	"github.com/PaloAltoNetworks/cov/internal/statuscheck/gitlabcheck"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
-	version = "v0.0.0"
+	version = "v0.1.0"
 	commit  = "dev"
 )
 
@@ -34,8 +36,11 @@ func main() {
 			branch := viper.GetString("branch")
 			threshold := viper.GetInt("threshold")
 			filters := viper.GetStringSlice("filters")
+			hostURL := viper.GetString("host-url")
 			ignored := viper.GetStringSlice("ignore")
+			provider := viper.GetString("provider")
 			quiet := viper.GetBool("quiet")
+			targetURL := viper.GetString("target-url")
 			thresholdExitCode := viper.GetInt("threshold-exit-code")
 			reportPath := viper.GetString("report-path")
 			writeReport := viper.GetString("write-report")
@@ -47,8 +52,18 @@ func main() {
 				return nil
 			}
 
+			var statusChecker statuscheck.StatusChecker
+			switch provider {
+			case "github":
+				statusChecker = githubcheck.New(hostURL, targetURL)
+			case "gitlab":
+				statusChecker = gitlabcheck.New(hostURL, targetURL)
+			default:
+				return fmt.Errorf("unknown provider: %s", provider)
+			}
+
 			if sendRepo != "" {
-				if err := statuscheck.Send(reportPath, sendRepo, sendToken); err != nil {
+				if err := statusChecker.Send(reportPath, sendRepo, sendToken); err != nil {
 					return fmt.Errorf("unable to send report as status check: %w", err)
 				}
 				return nil
@@ -80,7 +95,7 @@ func main() {
 				if len(files) == 0 {
 					fmt.Println("no change in go files")
 					if writeReport != "" {
-						if err := statuscheck.WriteNoop(reportPath); err != nil {
+						if err := statusChecker.WriteNoop(reportPath); err != nil {
 							return fmt.Errorf("unable to write noop status: %w", err)
 						}
 					}
@@ -105,7 +120,7 @@ func main() {
 			}
 
 			if writeReport != "" {
-				if err := statuscheck.Write(reportPath, int(coverage), threshold); err != nil {
+				if err := statusChecker.Write(reportPath, int(coverage), threshold); err != nil {
 					return fmt.Errorf("unable to write status check: %w", err)
 				}
 			}
@@ -123,13 +138,16 @@ func main() {
 	rootCmd.Flags().IntP("threshold", "t", 0, "The target of coverage in percent that is requested")
 	rootCmd.Flags().StringSliceP("filter", "f", nil, "The filters to use for coverage lookup")
 	rootCmd.Flags().StringSliceP("ignore", "i", nil, "Define patterns to ignore matching files.")
+	rootCmd.Flags().StringP("provider", "p", "github", "The provider to use for status checks: github, gitlab")
 	rootCmd.Flags().BoolP("quiet", "q", false, "Do not print details, just the verdict")
 	rootCmd.Flags().IntP("threshold-exit-code", "e", 1, "Set the exit code on coverage threshold miss")
 
+	rootCmd.Flags().String("host-url", "https://api.github.com", "The host URL of the provider.")
 	rootCmd.Flags().String("report-path", "cov.report", "Defines the path for the status report.")
+	rootCmd.Flags().String("target-url", "", "If set, associate the target URL with the status.")
 	rootCmd.Flags().Bool("write-report", false, "If set, write a status check report into --report-path")
 	rootCmd.Flags().String("send-repo", "", "If set, set the status report from --report-path as status check. format: [repo]/[owner]@[sha]")
-	rootCmd.Flags().String("send-token", "", "If set, use this token to send the status. If empty, $GITHUB_TOKEN will be used")
+	rootCmd.Flags().String("send-token", "", "If set, use this token to send the status. If empty, $GITHUB_TOKEN or $GITLAB_TOKEN will be used based on provider")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s\n", err)

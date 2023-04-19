@@ -1,3 +1,4 @@
 unit_coverage.cov
 dist
 cov
+*.report

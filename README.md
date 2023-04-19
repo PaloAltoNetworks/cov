@@ -117,7 +117,7 @@ with:
   cov_file: unit_coverage.out
 ```
 
-####  Coverage threshold
+#### Coverage threshold
 
 You can configure what is the minimum coverage target a patch must have in order
 to be considered up to standard. Note that you must give the percentage as a
@@ -150,7 +150,7 @@ repository. The syntax uses classic glob syntax.
 Note that cov uses the full go package name. So you need to either write the
 full package, or use a `**/prefix`.
 
-```
+```bash
 github.com/me/mypackage/ignored/*
 **/pkgs/api/*
 **/example/*
@@ -161,30 +161,37 @@ github.com/me/mypackage/ignored/*
 
 You can install cov locally:
 
-    go install github.com/PaloAltoNetworks/cov@latest
+```bash
+go install github.com/PaloAltoNetworks/cov@latest
+```
 
 Or you can grab a release from the releases page.
 
 ### Usage
 
-    Analyzes coverage
+```bash
+Analyzes coverage
 
-    Usage:
-      cov cover.out... [flags]
+Usage:
+  cov cover.out... [flags]
 
-    Flags:
-      -b, --branch string             The branch to use to check the patch coverage against. Example: master
-      -f, --filter strings            The filters to use for coverage lookup
-      -h, --help                      help for cov
-      -i, --ignore strings            Define patterns to ignore matching files.
-      -q, --quiet                     Do not print details, just the verdict
-          --report-path string        Defines the path for the status report. (default "cov.report")
-          --send-repo string          If set, set the status report from --report-path as status check. format: [repo]/[owner]@[sha]
-          --send-token string         If set, use this token to send the status. If empty, $GITHUB_TOKEN will be used
-      -t, --threshold int             The target of coverage in percent that is requested
-      -e, --threshold-exit-code int   Set the exit code on coverage threshold miss (default 1)
-          --version                   show version
-          --write-report              If set, write a status check report into --report-path
+Flags:
+  -b, --branch string             The branch to use to check the patch coverage against. Example: master
+  -f, --filter strings            The filters to use for coverage lookup
+  -h, --help                      help for cov
+      --host-url string           The host URL of the provider. (default "https://api.github.com")
+  -i, --ignore strings            Define patterns to ignore matching files.
+  -p, --provider string           The provider to use for status checks: github, gitlab (default "github")
+  -q, --quiet                     Do not print details, just the verdict
+      --report-path string        Defines the path for the status report. (default "cov.report")
+      --send-repo string          If set, set the status report from --report-path as status check. format: [repo]/[owner]@[sha]
+      --send-token string         If set, use this token to send the status. If empty, $GITHUB_TOKEN or $GITLAB_TOKEN will be used based on provider
+      --target-url string         If set, associate the target URL with the status.
+  -t, --threshold int             The target of coverage in percent that is requested
+  -e, --threshold-exit-code int   Set the exit code on coverage threshold miss (default 1)
+      --version                   show version
+      --write-report              If set, write a status check report into --report-path
+```
 
 When the `--branch` flag is used, a diff will be done between your current
 branch and the given branch to identify the files you changed, and only look for
@@ -204,16 +211,24 @@ use this parameter, the `.covignore` file will be ignored.
 
 Show coverage for all coverage files:
 
-    cov *.out
+```bash
+cov *.out
+```
 
 Show coverage for a pull request against master:
 
-    cov --branch master coverage.out
+```bash
+cov --branch master coverage.out
+```
 
 Ignore all files in `autogen/api` and `examples`:
 
-    cov --ignore "**/autogen/api/*" --ignore "**/examples/*" coverage.out
+```bash
+cov --ignore "**/autogen/api/*" --ignore "**/examples/*" coverage.out
+```
 
 Check for a minimum coverage, but don't exit with code 1:
 
-    cov --threshold 80 --threshold-exit-code 0 coverage.out
+```bash
+cov --threshold 80 --threshold-exit-code 0 coverage.out
+```
