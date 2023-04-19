@@ -142,9 +142,9 @@ func main() {
 	rootCmd.Flags().BoolP("quiet", "q", false, "Do not print details, just the verdict")
 	rootCmd.Flags().IntP("threshold-exit-code", "e", 1, "Set the exit code on coverage threshold miss")
 
-	rootCmd.Flags().String("host-url", "https://api.github.com", "The host URL of the provider")
+	rootCmd.Flags().String("host-url", "https://api.github.com", "The host URL of the provider.")
 	rootCmd.Flags().String("report-path", "cov.report", "Defines the path for the status report.")
-	rootCmd.Flags().String("target-url", "", "The target URL to associate with the status")
+	rootCmd.Flags().String("target-url", "", "If set, associate the target URL with the status.")
 	rootCmd.Flags().Bool("write-report", false, "If set, write a status check report into --report-path")
 	rootCmd.Flags().String("send-repo", "", "If set, set the status report from --report-path as status check. format: [repo]/[owner]@[sha]")
 	rootCmd.Flags().String("send-token", "", "If set, use this token to send the status. If empty, $GITHUB_TOKEN or $GITLAB_TOKEN will be used based on provider")

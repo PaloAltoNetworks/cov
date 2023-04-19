@@ -179,13 +179,14 @@ Flags:
   -b, --branch string             The branch to use to check the patch coverage against. Example: master
   -f, --filter strings            The filters to use for coverage lookup
   -h, --help                      help for cov
-      --host-url string           The host URL of the provider (default "https://api.github.com")
+      --host-url string           The host URL of the provider. (default "https://api.github.com")
   -i, --ignore strings            Define patterns to ignore matching files.
   -p, --provider string           The provider to use for status checks: github, gitlab (default "github")
   -q, --quiet                     Do not print details, just the verdict
       --report-path string        Defines the path for the status report. (default "cov.report")
       --send-repo string          If set, set the status report from --report-path as status check. format: [repo]/[owner]@[sha]
       --send-token string         If set, use this token to send the status. If empty, $GITHUB_TOKEN or $GITLAB_TOKEN will be used based on provider
+      --target-url string         If set, associate the target URL with the status.
   -t, --threshold int             The target of coverage in percent that is requested
   -e, --threshold-exit-code int   Set the exit code on coverage threshold miss (default 1)
       --version                   show version
