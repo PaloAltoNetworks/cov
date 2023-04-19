@@ -40,6 +40,7 @@ func main() {
 			ignored := viper.GetStringSlice("ignore")
 			provider := viper.GetString("provider")
 			quiet := viper.GetBool("quiet")
+			targetURL := viper.GetString("target-url")
 			thresholdExitCode := viper.GetInt("threshold-exit-code")
 			reportPath := viper.GetString("report-path")
 			writeReport := viper.GetString("write-report")
@@ -54,9 +55,9 @@ func main() {
 			var statusChecker statuscheck.StatusChecker
 			switch provider {
 			case "github":
-				statusChecker = githubcheck.New(hostURL)
+				statusChecker = githubcheck.New(hostURL, targetURL)
 			case "gitlab":
-				statusChecker = gitlabcheck.New(hostURL)
+				statusChecker = gitlabcheck.New(hostURL, targetURL)
 			default:
 				return fmt.Errorf("unknown provider: %s", provider)
 			}
@@ -143,6 +144,7 @@ func main() {
 
 	rootCmd.Flags().String("host-url", "https://api.github.com", "The host URL of the provider")
 	rootCmd.Flags().String("report-path", "cov.report", "Defines the path for the status report.")
+	rootCmd.Flags().String("target-url", "", "The target URL to associate with the status")
 	rootCmd.Flags().Bool("write-report", false, "If set, write a status check report into --report-path")
 	rootCmd.Flags().String("send-repo", "", "If set, set the status report from --report-path as status check. format: [repo]/[owner]@[sha]")
 	rootCmd.Flags().String("send-token", "", "If set, use this token to send the status. If empty, $GITHUB_TOKEN or $GITLAB_TOKEN will be used based on provider")

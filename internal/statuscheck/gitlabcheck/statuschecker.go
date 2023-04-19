@@ -14,6 +14,7 @@ import (
 
 type gitlabStatusCheck struct {
 	State       string `json:"state"`
+	TargetURL   string `json:"target_url,omitempty"`
 	Description string `json:"description"`
 	Context     string `json:"context"`
 
@@ -21,10 +22,11 @@ type gitlabStatusCheck struct {
 }
 
 // New returns a new statuc checker for GitLab.
-func New(hostURL string) statuscheck.StatusChecker {
+func New(hostURL string, targetURL string) statuscheck.StatusChecker {
 
 	return &gitlabStatusCheck{
-		hostURL: hostURL,
+		TargetURL: targetURL,
+		hostURL:   hostURL,
 	}
 }
 
@@ -98,6 +100,10 @@ func (s *gitlabStatusCheck) send(target string, token string) error {
 		"context":     []string{s.Context},
 		"state":       []string{s.State},
 		"description": []string{s.Description},
+	}
+
+	if s.TargetURL != "" {
+		params["target_url"] = []string{s.TargetURL}
 	}
 
 	req, err := http.NewRequest(

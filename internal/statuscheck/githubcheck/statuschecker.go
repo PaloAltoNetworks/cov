@@ -21,10 +21,11 @@ type githubStatusCheck struct {
 }
 
 // New returns a new statuc checker for GitHub.
-func New(hostURL string) statuscheck.StatusChecker {
+func New(hostURL string, targetURL string) statuscheck.StatusChecker {
 
 	return &githubStatusCheck{
-		hostURL: hostURL,
+		TargetURL: targetURL,
+		hostURL:   hostURL,
 	}
 }
 
