@@ -15,6 +15,7 @@ import (
 
 type gitlabStatusCheck struct {
 	Context     string `url:"context"`
+	Coverage    int    `url:"coverage"`
 	Description string `url:"description"`
 	PipelineID  string `url:"pipeline_id,omitempty"`
 	State       string `url:"state"`
@@ -52,6 +53,7 @@ func (s *gitlabStatusCheck) Send(reportPath string, target string, token string)
 func (s *gitlabStatusCheck) Write(path string, coverage int, threshold int) error {
 
 	s.Context = "cov"
+	s.Coverage = coverage
 	s.State = func() string {
 		if coverage >= threshold {
 			return "success"
