@@ -9,24 +9,27 @@ import (
 	"strings"
 
 	"github.com/PaloAltoNetworks/cov/internal/statuscheck"
+	"github.com/google/go-querystring/query"
 	"github.com/xanzy/go-gitlab"
 )
 
 type gitlabStatusCheck struct {
-	State       string `json:"state"`
-	TargetURL   string `json:"target_url,omitempty"`
-	Description string `json:"description"`
-	Context     string `json:"context"`
+	Context     string `url:"context"`
+	Description string `url:"description"`
+	PipelineID  string `url:"pipeline_id,omitempty"`
+	State       string `url:"state"`
+	TargetURL   string `url:"target_url,omitempty"`
 
-	hostURL string
+	hostURL string `url:"-"`
 }
 
 // New returns a new statuc checker for GitLab.
-func New(hostURL string, targetURL string) statuscheck.StatusChecker {
+func New(hostURL string, targetURL string, pipelineID string) statuscheck.StatusChecker {
 
 	return &gitlabStatusCheck{
-		TargetURL: targetURL,
-		hostURL:   hostURL,
+		PipelineID: pipelineID,
+		TargetURL:  targetURL,
+		hostURL:    hostURL,
 	}
 }
 
@@ -96,14 +99,9 @@ func (s *gitlabStatusCheck) send(target string, token string) error {
 		token = os.Getenv("GITLAB_TOKEN")
 	}
 
-	params := url.Values{
-		"context":     []string{s.Context},
-		"state":       []string{s.State},
-		"description": []string{s.Description},
-	}
-
-	if s.TargetURL != "" {
-		params["target_url"] = []string{s.TargetURL}
+	params, err := query.Values(s)
+	if err != nil {
+		return fmt.Errorf("unable to create params: %w", err)
 	}
 
 	req, err := http.NewRequest(

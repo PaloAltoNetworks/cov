@@ -38,6 +38,7 @@ func main() {
 			filters := viper.GetStringSlice("filters")
 			hostURL := viper.GetString("host-url")
 			ignored := viper.GetStringSlice("ignore")
+			pipelineID := viper.GetString("pipeline-id")
 			provider := viper.GetString("provider")
 			quiet := viper.GetBool("quiet")
 			targetURL := viper.GetString("target-url")
@@ -57,7 +58,7 @@ func main() {
 			case "github":
 				statusChecker = githubcheck.New(hostURL, targetURL)
 			case "gitlab":
-				statusChecker = gitlabcheck.New(hostURL, targetURL)
+				statusChecker = gitlabcheck.New(hostURL, targetURL, pipelineID)
 			default:
 				return fmt.Errorf("unknown provider: %s", provider)
 			}
@@ -143,6 +144,7 @@ func main() {
 	rootCmd.Flags().IntP("threshold-exit-code", "e", 1, "Set the exit code on coverage threshold miss")
 
 	rootCmd.Flags().String("host-url", "https://api.github.com", "The host URL of the provider.")
+	rootCmd.Flags().String("pipeline-id", "", "If set, defines the ID of the pipeline to set the status.")
 	rootCmd.Flags().String("report-path", "cov.report", "Defines the path for the status report.")
 	rootCmd.Flags().String("target-url", "", "If set, associate the target URL with the status.")
 	rootCmd.Flags().Bool("write-report", false, "If set, write a status check report into --report-path")
