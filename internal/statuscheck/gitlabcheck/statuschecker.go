@@ -14,14 +14,14 @@ import (
 )
 
 type gitlabStatusCheck struct {
-	Context     string `url:"context"`
-	Coverage    int    `url:"coverage"`
-	Description string `url:"description"`
-	PipelineID  string `url:"pipeline_id,omitempty"`
-	State       string `url:"state"`
-	TargetURL   string `url:"target_url,omitempty"`
+	Context     string `json:"context" url:"context"`
+	Coverage    int    `json:"coverage" url:"coverage"`
+	Description string `json:"description" url:"description"`
+	PipelineID  string `json:"pipeline_id,omitempty" url:"pipeline_id,omitempty"`
+	State       string `json:"state" url:"state"`
+	TargetURL   string `json:"target_url,omitempty" url:"target_url,omitempty"`
 
-	hostURL string `url:"-"`
+	hostURL string `json:"-" url:"-"`
 }
 
 // New returns a new statuc checker for GitLab.
