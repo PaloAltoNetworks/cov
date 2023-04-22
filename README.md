@@ -181,6 +181,7 @@ Flags:
   -h, --help                      help for cov
       --host-url string           The host URL of the provider. (default "https://api.github.com")
   -i, --ignore strings            Define patterns to ignore matching files.
+      --pipeline-id string        If set, defines the ID of the pipeline to set the status.
   -p, --provider string           The provider to use for status checks: github, gitlab (default "github")
   -q, --quiet                     Do not print details, just the verdict
       --report-path string        Defines the path for the status report. (default "cov.report")
