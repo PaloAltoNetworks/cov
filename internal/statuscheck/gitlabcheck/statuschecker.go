@@ -14,12 +14,12 @@ import (
 )
 
 type gitlabStatusCheck struct {
-	Context     string `json:"context" url:"context"`
-	Coverage    int    `json:"coverage" url:"coverage"`
-	Description string `json:"description" url:"description"`
-	PipelineID  string `json:"pipeline_id,omitempty" url:"pipeline_id,omitempty"`
-	State       string `json:"state" url:"state"`
-	TargetURL   string `json:"target_url,omitempty" url:"target_url,omitempty"`
+	Context     string  `json:"context" url:"context"`
+	Coverage    float64 `json:"coverage" url:"coverage"`
+	Description string  `json:"description" url:"description"`
+	PipelineID  string  `json:"pipeline_id,omitempty" url:"pipeline_id,omitempty"`
+	State       string  `json:"state" url:"state"`
+	TargetURL   string  `json:"target_url,omitempty" url:"target_url,omitempty"`
 
 	hostURL string `json:"-" url:"-"`
 }
@@ -50,7 +50,7 @@ func (s *gitlabStatusCheck) Send(reportPath string, target string, token string)
 }
 
 // Write writes the reports file.
-func (s *gitlabStatusCheck) Write(path string, coverage int, threshold int) error {
+func (s *gitlabStatusCheck) Write(path string, coverage float64, threshold float64) error {
 
 	s.Context = "cov"
 	s.Coverage = coverage
@@ -61,7 +61,7 @@ func (s *gitlabStatusCheck) Write(path string, coverage int, threshold int) erro
 		return "failure"
 	}()
 	s.Description = func() string {
-		info := fmt.Sprintf("%d%% / %d%%", coverage, threshold)
+		info := fmt.Sprintf("%.2f%% / %.2f%%", coverage, threshold)
 		if coverage >= threshold {
 			return fmt.Sprintf("success %s", info)
 		}

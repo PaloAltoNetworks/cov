@@ -34,7 +34,7 @@ func main() {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			branch := viper.GetString("branch")
-			threshold := viper.GetInt("threshold")
+			threshold := viper.GetFloat64("threshold")
 			filters := viper.GetStringSlice("filters")
 			hostURL := viper.GetString("host-url")
 			ignored := viper.GetStringSlice("ignore")
@@ -106,22 +106,22 @@ func main() {
 
 			tree := coverage.NewTree(profiles, files)
 			if !quiet {
-				tree.Fprint(os.Stderr, true, "", float64(threshold))
+				tree.Fprint(os.Stderr, true, "", threshold)
 			}
 
 			coverage := tree.GetCoverage()
-			isSuccess := threshold > 0 && threshold <= int(coverage)
+			isSuccess := threshold > 0 && threshold <= coverage
 
 			if isSuccess {
-				fmt.Printf("up to standard. %.0f%% / %d%%\n", coverage, threshold)
+				fmt.Printf("up to standard. %.2f%% / %.2f%%\n", coverage, threshold)
 			} else if threshold > 0 {
-				fmt.Printf("not up to standard. %.0f%% / %d%%\n", coverage, threshold)
+				fmt.Printf("not up to standard. %.2f%% / %.2f%%\n", coverage, threshold)
 			} else {
-				fmt.Printf("%.0f%% / %d%%\n", coverage, threshold)
+				fmt.Printf("%.2f%% / %.2f%%\n", coverage, threshold)
 			}
 
 			if writeReport != "" {
-				if err := statusChecker.Write(reportPath, int(coverage), threshold); err != nil {
+				if err := statusChecker.Write(reportPath, coverage, threshold); err != nil {
 					return fmt.Errorf("unable to write status check: %w", err)
 				}
 			}
@@ -136,7 +136,7 @@ func main() {
 
 	rootCmd.PersistentFlags().Bool("version", false, "show version")
 	rootCmd.Flags().StringP("branch", "b", "", "The branch to use to check the patch coverage against. Example: master")
-	rootCmd.Flags().IntP("threshold", "t", 0, "The target of coverage in percent that is requested")
+	rootCmd.Flags().Float64P("threshold", "t", 0, "The target of coverage in percent that is requested")
 	rootCmd.Flags().StringSliceP("filter", "f", nil, "The filters to use for coverage lookup")
 	rootCmd.Flags().StringSliceP("ignore", "i", nil, "Define patterns to ignore matching files.")
 	rootCmd.Flags().StringP("provider", "p", "github", "The provider to use for status checks: github, gitlab")

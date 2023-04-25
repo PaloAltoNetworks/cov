@@ -7,7 +7,7 @@ type StatusChecker interface {
 	Send(reportPath string, target string, token string) error
 
 	// Write creates the reports file.
-	Write(path string, coverage int, threshold int) error
+	Write(path string, coverage float64, threshold float64) error
 
 	// WriteNoop sends a noop check.
 	WriteNoop(path string) error
