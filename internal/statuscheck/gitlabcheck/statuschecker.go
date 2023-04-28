@@ -58,7 +58,7 @@ func (s *gitlabStatusCheck) Write(path string, coverage float64, threshold float
 		if coverage >= threshold {
 			return "success"
 		}
-		return "failure"
+		return "failed"
 	}()
 	s.Description = func() string {
 		info := fmt.Sprintf("%.2f%% / %.2f%%", coverage, threshold)
