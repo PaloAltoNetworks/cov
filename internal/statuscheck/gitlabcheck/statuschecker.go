@@ -9,24 +9,28 @@ import (
 	"strings"
 
 	"github.com/PaloAltoNetworks/cov/internal/statuscheck"
+	"github.com/google/go-querystring/query"
 	"github.com/xanzy/go-gitlab"
 )
 
 type gitlabStatusCheck struct {
-	State       string `json:"state"`
-	TargetURL   string `json:"target_url,omitempty"`
-	Description string `json:"description"`
-	Context     string `json:"context"`
+	Context     string  `json:"context" url:"context"`
+	Coverage    float64 `json:"coverage" url:"coverage"`
+	Description string  `json:"description" url:"description"`
+	PipelineID  string  `json:"pipeline_id,omitempty" url:"pipeline_id,omitempty"`
+	State       string  `json:"state" url:"state"`
+	TargetURL   string  `json:"target_url,omitempty" url:"target_url,omitempty"`
 
-	hostURL string
+	hostURL string `json:"-" url:"-"`
 }
 
 // New returns a new statuc checker for GitLab.
-func New(hostURL string, targetURL string) statuscheck.StatusChecker {
+func New(hostURL string, targetURL string, pipelineID string) statuscheck.StatusChecker {
 
 	return &gitlabStatusCheck{
-		TargetURL: targetURL,
-		hostURL:   hostURL,
+		PipelineID: pipelineID,
+		TargetURL:  targetURL,
+		hostURL:    hostURL,
 	}
 }
 
@@ -46,17 +50,18 @@ func (s *gitlabStatusCheck) Send(reportPath string, target string, token string)
 }
 
 // Write writes the reports file.
-func (s *gitlabStatusCheck) Write(path string, coverage int, threshold int) error {
+func (s *gitlabStatusCheck) Write(path string, coverage float64, threshold float64) error {
 
 	s.Context = "cov"
+	s.Coverage = coverage
 	s.State = func() string {
 		if coverage >= threshold {
 			return "success"
 		}
-		return "failure"
+		return "failed"
 	}()
 	s.Description = func() string {
-		info := fmt.Sprintf("%d%% / %d%%", coverage, threshold)
+		info := fmt.Sprintf("%.2f%% / %.2f%%", coverage, threshold)
 		if coverage >= threshold {
 			return fmt.Sprintf("success %s", info)
 		}
@@ -96,14 +101,9 @@ func (s *gitlabStatusCheck) send(target string, token string) error {
 		token = os.Getenv("GITLAB_TOKEN")
 	}
 
-	params := url.Values{
-		"context":     []string{s.Context},
-		"state":       []string{s.State},
-		"description": []string{s.Description},
-	}
-
-	if s.TargetURL != "" {
-		params["target_url"] = []string{s.TargetURL}
+	params, err := query.Values(s)
+	if err != nil {
+		return fmt.Errorf("unable to create params: %w", err)
 	}
 
 	req, err := http.NewRequest(

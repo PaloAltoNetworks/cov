@@ -45,7 +45,7 @@ func (s *githubStatusCheck) Send(reportPath string, target string, token string)
 }
 
 // Write writes the reports file.
-func (s *githubStatusCheck) Write(path string, coverage int, threshold int) error {
+func (s *githubStatusCheck) Write(path string, coverage float64, threshold float64) error {
 
 	s.Context = "cov"
 	s.State = func() string {
@@ -55,7 +55,7 @@ func (s *githubStatusCheck) Write(path string, coverage int, threshold int) erro
 		return "failure"
 	}()
 	s.Description = func() string {
-		info := fmt.Sprintf("%d%% / %d%%", coverage, threshold)
+		info := fmt.Sprintf("%.2f%% / %.2f%%", coverage, threshold)
 		if coverage >= threshold {
 			return fmt.Sprintf("success %s", info)
 		}
