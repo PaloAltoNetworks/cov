@@ -25,9 +25,15 @@ func GetDiffFiles(branch string) (files []string, err error) {
 
 	var goFiles []string
 	for _, f := range files {
-		if strings.HasSuffix(f, ".go") {
-			goFiles = append(goFiles, f)
+		if !strings.HasSuffix(f, ".go") {
+			continue
 		}
+
+		if strings.HasSuffix(f, "_test.go") {
+			continue
+		}
+
+		goFiles = append(goFiles, f)
 	}
 
 	return goFiles, nil
